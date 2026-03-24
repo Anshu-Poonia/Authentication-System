@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
+import transporter from "../config/nodemailer.js";
 
 // Register a new user
 export const register = async (req, res) => {
@@ -23,7 +24,11 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // create new user
-    const user = new userModel({ name, email, password: hashedPassword });
+    const user = new userModel({
+      name,
+      email,
+      password: hashedPassword,
+    });
     await user.save();
 
     // create and send token in cookie
@@ -36,6 +41,18 @@ export const register = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
+    //send an email to the user(welcome email)
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Welcome to Our App",
+      text: `Hi ${user.name},\n\nWelcome to our app! We're excited to have you on board.\nYour account has been created successfully with the email ${user.email}.\n\nBest regards,\nThe Team`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // return success response
     return res.json({ success: true, message: "User registered successfully" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
@@ -74,6 +91,8 @@ export const login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
+    // return success response
     return res.json({ success: true, message: "Logged in successfully" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
@@ -88,8 +107,85 @@ export const logout = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     });
+
+    // return success response
     return res.json({ success: true, message: "Logged out successfully" });
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
 };
+
+// email verification(OTP is generated and sent to user's email)
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const {userId} = req.body;
+
+    // find user by id
+    const user = await userModel.findById(userId);
+    if (user.isAccountVerified) {
+      return res.json({ success: false, message: "Account is already verified" });
+    }
+
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.verifyOtp = otp;
+    user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // OTP valid for 24 hours
+    await user.save();
+
+    // send OTP email to user
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Account Verification OTP",
+      text: `Hi ${user.name},\n\nYour OTP for account verification is: ${otp}\nThis OTP is valid for 24 hours.\n\nBest regards,\nThe Team`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // return success response
+    return res.json({ success: true, message: "OTP sent successfully" });
+
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+}
+
+// verify OTP and activate account
+export const verifyOtp = async (req, res) => {
+  const {userId, otp} = req.body;
+
+  if(!userId || !otp) {
+    return res.json({ success: false, message: "Missing Details" });
+  }
+
+  try {
+    // find user by id
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    // check if OTP is valid
+    if (user.verifyOtp !== otp || user.verifyOtp === "") {
+      return res.json({ success: false, message: "Invalid OTP" });
+    }
+
+    // check if OTP is expired
+    if (Date.now() > user.verifyOtpExpireAt) {
+      return res.json({ success: false, message: "OTP has expired" });
+    }
+
+    // activate account
+    user.isAccountVerified = true;
+    user.verifyOtp = "";
+    user.verifyOtpExpireAt = 0;
+    await user.save();
+
+    // return success response
+    return res.json({ success: true, message: "Account verified successfully" });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+
+}
