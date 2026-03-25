@@ -23,7 +23,7 @@ export const register = async (req, res) => {
     // hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // create new user
+    // create new user in database
     const user = new userModel({
       name,
       email,
@@ -118,44 +118,47 @@ export const logout = async (req, res) => {
 // email verification(OTP is generated and sent to user's email)
 export const sendVerifyOtp = async (req, res) => {
   try {
-    const {userId} = req.body;
+    const userId = req.userId;
 
     // find user by id
     const user = await userModel.findById(userId);
     if (user.isAccountVerified) {
-      return res.json({ success: false, message: "Account is already verified" });
+      return res.json({
+        success: false,
+        message: "Account is already verified",
+      });
     }
 
     // generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
 
     user.verifyOtp = otp;
-    user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // OTP valid for 24 hours
+    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
     await user.save();
 
     // send OTP email to user
-    const mailOptions = {
+    const mailOption = {
       from: process.env.SENDER_EMAIL,
       to: user.email,
       subject: "Account Verification OTP",
-      text: `Hi ${user.name},\n\nYour OTP for account verification is: ${otp}\nThis OTP is valid for 24 hours.\n\nBest regards,\nThe Team`,
+      text: `Hi ${user.name},\n\nYour OTP for account verification is: ${otp}\nThis OTP is valid for 10 minutes.\n\nBest regards,\nThe Team`,
     };
 
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOption);
 
     // return success response
     return res.json({ success: true, message: "OTP sent successfully" });
-
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
-}
+};
 
-// verify OTP and activate account
-export const verifyOtp = async (req, res) => {
-  const {userId, otp} = req.body;
+// verify account using OTP
+export const verifyEmail = async (req, res) => {
+  const userId = req.userId;
+  const { otp } = req.body;
 
-  if(!userId || !otp) {
+  if (!userId || !otp) {
     return res.json({ success: false, message: "Missing Details" });
   }
 
@@ -164,6 +167,11 @@ export const verifyOtp = async (req, res) => {
     const user = await userModel.findById(userId);
     if (!user) {
       return res.json({ success: false, message: "User not found" });
+    }
+
+    // if account is already verified, then return error
+    if (user.isAccountVerified) {
+      return res.json({ success: false, message: "Account already verified" });
     }
 
     // check if OTP is valid
@@ -176,16 +184,20 @@ export const verifyOtp = async (req, res) => {
       return res.json({ success: false, message: "OTP has expired" });
     }
 
-    // activate account
+    // verify account
     user.isAccountVerified = true;
     user.verifyOtp = "";
     user.verifyOtpExpireAt = 0;
     await user.save();
 
     // return success response
-    return res.json({ success: true, message: "Account verified successfully" });
+    return res.json({
+      success: true,
+      message: "Account verified successfully",
+    });
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
+};
 
-}
+// user is already authenticated or not
