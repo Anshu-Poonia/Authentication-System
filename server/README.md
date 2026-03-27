@@ -1,0 +1,1 @@
+This is a Authentication project's backend part in which we created the api's for authentication functionalities.
