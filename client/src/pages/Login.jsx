@@ -29,8 +29,8 @@ const Login = () => {
         });
         if (data.success) {
           setIsLoggedin(true);
-          getUserData();  // Fetch user data after successful registration
-          navigate("/");  // Redirect to home page after successful registration
+          getUserData(); // Fetch user data after successful registration
+          navigate("/"); // Redirect to home page after successful registration
         } else {
           toast.error(data.message);
         }
@@ -41,8 +41,8 @@ const Login = () => {
         });
         if (data.success) {
           setIsLoggedin(true);
-          getUserData();  // Fetch user data after successful login
-          navigate("/");  // Redirect to home page after successful login
+          getUserData(); // Fetch user data after successful login
+          navigate("/"); // Redirect to home page after successful login
         } else {
           toast.error(data.message);
         }
@@ -113,7 +113,7 @@ const Login = () => {
 
           {state !== "Sign Up" ? (
             <p
-              onClick={() => navigate("/reset-password")}  // Redirect to reset password page when clicked
+              onClick={() => navigate("/reset-password")} // Redirect to reset password page when clicked
               className="mb-4 text-indigo-500 text-right text-xs underline cursor-pointer"
             >
               Forget Password?

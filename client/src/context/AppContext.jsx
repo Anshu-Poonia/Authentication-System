@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 export const AppContent = createContext();
 
 export const AppContextProvider = ({ children }) => {
-
   axios.defaults.withCredentials = true; // Ensure cookies are sent with every request
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -19,26 +18,26 @@ export const AppContextProvider = ({ children }) => {
       const { data } = await axios.get(backendUrl + "/api/auth/is-auth");
       if (data.success) {
         setIsLoggedin(true);
-        getUserData();  // Fetch user data if authenticated
+        getUserData(); // Fetch user data if authenticated
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "An error occurred");
     }
-  }
+  };
 
   // Function to fetch user data from the backend
   const getUserData = async () => {
     try {
-        const {data} = await axios.get(backendUrl + "/api/user/data");
-        if(data.success){
-            setUserData(data.userData);
-        }else{
-            toast.error(data.message);
-        }
+      const { data } = await axios.get(backendUrl + "/api/user/data");
+      if (data.success) {
+        setUserData(data.userData);
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
-        toast.error(error?.response?.data?.message || "An error occurred");
+      toast.error(error?.response?.data?.message || "An error occurred");
     }
-  }
+  };
 
   useEffect(() => {
     getAuthState();
@@ -53,9 +52,5 @@ export const AppContextProvider = ({ children }) => {
     getUserData,
   };
 
-  return (
-    <AppContent.Provider value={value}>
-      {children}
-    </AppContent.Provider>
-  );
+  return <AppContent.Provider value={value}>{children}</AppContent.Provider>;
 };
