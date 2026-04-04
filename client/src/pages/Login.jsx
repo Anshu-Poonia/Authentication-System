@@ -20,6 +20,7 @@ const Login = () => {
 
       axios.defaults.withCredentials = true;
 
+      // Depending on the current state (Sign Up or Login), make the appropriate API call to the backend
       if (state === "Sign Up") {
         const { data } = await axios.post(backendUrl + "/api/auth/register", {
           name,
