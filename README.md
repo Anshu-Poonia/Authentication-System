@@ -1,4 +1,5 @@
 Authentication System using MERN Stack
+--------------------------------------
 
 In this project, we create a JWT authentication system where user register their account and login. 
 
