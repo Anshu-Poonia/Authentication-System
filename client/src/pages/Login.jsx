@@ -5,6 +5,7 @@ import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// creating the login page, where user can login it's profile and redirect to home page.
 const Login = () => {
   const navigate = useNavigate();
   const { backendUrl, setIsLoggedin, getUserData } = useContext(AppContent);
