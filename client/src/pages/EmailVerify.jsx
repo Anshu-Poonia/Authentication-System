@@ -5,6 +5,7 @@ import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// EmailVerify component allows users to enter a 6-digit OTP sent to their email for account verification. It includes input handling for OTP fields, automatic focus management, and API integration for OTP verification. If the user is already logged in and their account is verified, they are redirected to the home page.
 const EmailVerify = () => {
 
   axios.defaults.withCredentials = true;
