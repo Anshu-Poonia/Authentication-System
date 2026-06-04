@@ -10,6 +10,7 @@ const Navbar = () => {
   const { userData, backendUrl, setUserData, setIsLoggedin } =
     useContext(AppContent);
 
+    // Function to send a verification OTP to the user's email for account verification. It makes an API call to the backend and handles the response accordingly. If the OTP is sent successfully, it navigates the user to the email verification page and shows a success toast message. If there is an error, it displays an error toast message.
   const sendVerificationOtp = async () => {
     try {
       axios.defaults.withCredentials = true;

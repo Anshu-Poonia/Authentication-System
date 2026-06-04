@@ -6,6 +6,7 @@ const Header = () => {
 
   const {userData} = useContext(AppContent);
 
+  // The Header component displays a welcome message to the user along with a header image and a "Get Started" button. It uses the user's name from the context to personalize the greeting. If the user data is not available, it defaults to "Developer". The component is styled using Tailwind CSS classes for a responsive and visually appealing layout.
   return (
     <div className="flex flex-col items-center mt-20 px-4 text-center text-gray-800">
       <img
